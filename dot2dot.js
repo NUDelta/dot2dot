@@ -18,6 +18,9 @@ function defineSimplify(){
 		this.p2 = p2;
 		
 		this.distanceToPoint = function( point ) {
+		    if ((this.p1.lat() == this.p2.lat()) && (this.p1.lng() == this.p2.lng())) 
+			return  Math.sqrt( Math.pow( ( point.lng() - this.p1.lng() ), 2 ) + Math.pow( ( point.lat() - this.p1.lat() ), 2 ) )
+
                     // slope
                     var m = ( this.p2.lat() - this.p1.lat() ) / ( this.p2.lng() - this.p1.lng() ),
                     // y offset
@@ -66,30 +69,31 @@ function defineSimplify(){
                 }
             }
 
-//	    console.log("tolerance:", tolerance)
-//	    console.log("maxDist:", maxDistance)
+	    console.log("tolerance:", tolerance)
+	    console.log("maxDist:", maxDistance)
+	    console.log("maxDistIndex:", maxDistanceIndex)
 
             // check if the max distance is greater than our tollerance allows 
             if ( maxDistance >= tolerance ) {
                 p = points[maxDistanceIndex];
 
-	//	console.log("including... ", maxDistanceIndex)
+		console.log("including... ", maxDistanceIndex)
 
                 line.distanceToPoint( p, true );
                 // include this point in the output 
-	//	console.log("calling with 0 to ", (maxDistanceIndex ))
+		console.log("calling with 0 to ", (maxDistanceIndex ))
 
                 returnPoints = returnPoints.concat( douglasPeucker( points.slice( 0, maxDistanceIndex + 1 ), tolerance ) );
                 // returnPoints.push( points[maxDistanceIndex] );
-
-	//	console.log("calling with  ", (maxDistanceIndex), " to ", (points.length -1) )
+		
+		console.log("calling with  ", (maxDistanceIndex), " to ", (points.length -1) )
 
                 returnPoints = returnPoints.concat( douglasPeucker( points.slice( maxDistanceIndex, points.length ), tolerance ) );
             } else {
                 // ditching this point
                 p = points[maxDistanceIndex];
 
-		console.log("ditching", p.lat(), p.lng())
+		console.log("ditching " +  maxDistanceIndex + ": " +  p.lat() + ", " + p.lng())
 
                 line.distanceToPoint( p, true );
                 returnPoints = [points[0]];
@@ -117,6 +121,8 @@ function updateLabels(){
     
     for (var i = 0; i < points.length; i++) {
 	points[i].angle = Math.atan2(points[i].lat - com.lat, points[i].lng - com.lng) * 180 / Math.PI;
+//	if (points[i].angle < 0) 
+//	    points[i].angle += 360
     }
     
     points.sort(function(a,b) {
@@ -127,6 +133,8 @@ function updateLabels(){
 	return 0;
     });
     
+//    console.log("angles: " + points.map(function (x) { return x.angle}))
+
     for (var i = 0; i < points.length; i++) {
 	
 	Markers.update(points[i]._id, {$set: 
@@ -290,13 +298,15 @@ if (Meteor.isClient) {
 
     Template.controls.events({
 	'click #load-example-1': function (e) {
-	    var points = Markers.find().fetch();
-	    for (var i = 0; i < points.length; i++){
-		Markers.remove(points[i]._id);
-	    }
-
-	    for (var i = 0; i < example1.length; i++){
-		Markers.insert(example1[i]);
+	    if (confirm("This loads an example but loses your current markers. Continue?")) {
+		var points = Markers.find().fetch();
+		for (var i = 0; i < points.length; i++){
+		    Markers.remove(points[i]._id);
+		}
+		
+		for (var i = 0; i < example1.length; i++){
+		    Markers.insert(example1[i]);
+		}
 	    }
 	},
 	
@@ -315,8 +325,8 @@ if (Meteor.isClient) {
 	    var path = points.map(function (x){ return {lat: x.lat, lng: x.lng }});
 
 	    console.log("this is the  path:", path)
-// TODO: can't add this line below if using simplification
-//	    path.push( {lat: points[0].lat, lng: points[0].lng})
+
+// adding closed loop? do:	    path.push(path[0])
 
 	    var pointPath = new google.maps.Polyline({    
 		path: path,
@@ -325,7 +335,11 @@ if (Meteor.isClient) {
 		strokeOpacity: 0.7,
 		strokeWeight: 8
 	    });
+
+
 	    pointPath.setMap(GoogleMaps.maps.map.instance)
+
+	    // for drawing; we keep the path separate because the simplification algorithm doesn't seem to want the looping segment
 	    var closedPath = new google.maps.Polyline({    
 		path: [path[path.length -1],
 		       path[0]],
@@ -337,7 +351,7 @@ if (Meteor.isClient) {
 	    closedPath.setMap(GoogleMaps.maps.map.instance)
 
 
-	    var simplifiedLinePath = pointPath.simplifyLine(0.001);
+	    var simplifiedLinePath = pointPath.simplifyLine(0.001); // default: .001
 
 	    simplifiedLinePath.push(simplifiedLinePath[0]);
 
