@@ -289,6 +289,17 @@ if (Meteor.isClient) {
     });   
 
     Template.controls.events({
+	'click #load-example-1': function (e) {
+	    var points = Markers.find().fetch();
+	    for (var i = 0; i < points.length; i++){
+		Markers.remove(points[i]._id);
+	    }
+
+	    for (var i = 0; i < example1.length; i++){
+		Markers.insert(example1[i]);
+	    }
+	},
+	
 	'click #simplify-shape': function (e) {
 	    updateLabels();
 
