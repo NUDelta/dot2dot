@@ -1,0 +1,36 @@
+<head>
+  <title>Dot to Dot </title>
+</head>
+
+<body>
+  {{> map}}
+  {{>controls}}
+  {{> poi}}
+</body>
+
+<template name="controls">
+  <button id='get-com'>Center of Mass</button>
+  <button id='label-markers'>Label points</button>
+  <button id='simplify-shape'>Simplify shape</button>
+</template>
+
+<template name="map">
+  <input id="pac-input" class="controls" type="text" placeholder="Search Box">
+  <div class="map-container">
+    {{> googleMap name="map" options=mapOptions}}
+  </div>
+</template>
+
+<template name="poi">
+  <div class="filler"></div>
+  <div class="POI-container">
+    {{#each markers}}
+    <div class="poi-item">
+      <a class="remove-poi-item" href="#">X</a>
+      <div class="poi-item-title">{{name}}</div>
+      <div class="poi-item-address">{{vicinity}}</div>
+      <input class="poi-input poi-item-note" type="text" placeholder="add a note" value="{{note}}"/>
+    </div>
+    {{/each}}
+  </div>
+</template>
