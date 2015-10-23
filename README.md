@@ -7,14 +7,14 @@ install
  
 2. create settings.json that looks like this:
 
-{
-    "public": {
-        "googleAPIKey": "YOUR_API_KEY_HERE"
-    }
-}
+  {
+      "public": {
+          "googleAPIKey": "YOUR_API_KEY_HERE"
+      }
+  }
 
-3a. meteor run --settings settings.json 
+3. meteor run --settings settings.json 
 
-3b. meteor deploy APP_NAME --settings settings.json 
+4. meteor deploy APP_NAME --settings settings.json 
 
 
