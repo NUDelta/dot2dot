@@ -326,7 +326,9 @@ if (Meteor.isClient) {
 
 	    console.log("this is the  path:", path)
 
-// adding closed loop? do:	    path.push(path[0])
+// adding closed loop? do:
+	    path.push(path[0])
+
 
 	    var pointPath = new google.maps.Polyline({    
 		path: path,
@@ -339,21 +341,48 @@ if (Meteor.isClient) {
 
 	    pointPath.setMap(GoogleMaps.maps.map.instance)
 
-	    // for drawing; we keep the path separate because the simplification algorithm doesn't seem to want the looping segment
-	    var closedPath = new google.maps.Polyline({    
-		path: [path[path.length -1],
-		       path[0]],
+	    // // for drawing; we keep the path separate because the simplification algorithm doesn't seem to want the looping segment
+	    // var closedPath = new google.maps.Polyline({    
+	    // 	path: [path[path.length -1],
+	    // 	       path[0]],
+	    // 	geodesic: true,
+	    // 	strokeColor: '#FF0000',
+	    // 	strokeOpacity: 0.7,
+	    // 	strokeWeight: 8
+	    // });
+	    // closedPath.setMap(GoogleMaps.maps.map.instance)
+
+
+	    var simplifiedLinePath = pointPath.simplifyLine(0.001); // default: .001
+
+
+	    // TODO: assume has at least 3 points...
+	    var correctStartPath = [ simplifiedLinePath[simplifiedLinePath.length-2],
+				     simplifiedLinePath[0],
+				     simplifiedLinePath[1] ]
+
+	    var cspline = new google.maps.Polyline({    
+		path: correctStartPath,
 		geodesic: true,
 		strokeColor: '#FF0000',
 		strokeOpacity: 0.7,
 		strokeWeight: 8
 	    });
-	    closedPath.setMap(GoogleMaps.maps.map.instance)
 
 
-	    var simplifiedLinePath = pointPath.simplifyLine(0.001); // default: .001
+	    var corrected = cspline.simplifyLine(0.001); // default: .001
+	    console.log("corrected: ", corrected)
 
-	    simplifiedLinePath.push(simplifiedLinePath[0]);
+	    if(corrected.length == 2) {
+		// ditched a point
+		simplifiedLinePath.splice(simplifiedLinePath.length -1, 1);
+		simplifiedLinePath.splice(0, 1);
+		simplifiedLinePath.push(simplifiedLinePath[0])
+	    }
+
+//	    simplifiedLinePath.push(simplifiedLinePath[0]);
+
+
 
 	    var simplifiedLine = new google.maps.Polyline({
 		path: simplifiedLinePath,
